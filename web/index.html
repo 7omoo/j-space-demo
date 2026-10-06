@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>J-Space Demo</title>
+    <meta
+      name="description"
+      content="What the LLM says, and what it has in mind: the J-lens (Jacobian lens) reads the J-space of open models to show when a reply says yes while the model has the danger in mind. AI の建前と本音を、J-lens で読み出すデモ。"
+    />
+    <meta
+      name="keywords"
+      content="J-Space, J-space, J-lens, Jacobian lens, interpretability, sycophancy, LLM, 迎合, 解釈可能性"
+    />
+    <meta property="og:title" content="J-Space Demo" />
+    <meta
+      property="og:description"
+      content="What the LLM says, and what it has in mind, read with the Jacobian lens (J-lens)."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://7omoo.github.io/j-space-demo/" />
+    <meta property="og:image" content="https://7omoo.github.io/j-space-demo/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="A reply that says “Absolutely, that sounds completely fine!” beside bleeding, risk and blood at the top of the model’s readout"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      // The theme before the first paint: the reader's choice, else the system's (web/core/theme.js switches it).
+      (() => {
+        let stored = null;
+        try {
+          stored = localStorage.getItem("jspace.theme");
+        } catch {
+          // storage blocked: follow the system
+        }
+        const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+        document.documentElement.dataset.theme =
+          stored === "dark" || stored === "light" ? stored : dark ? "dark" : "light";
+      })();
+    </script>
+    <link rel="preload" href="fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <a class="skip" href="#view">本文へ / Skip to content</a>
+    <header class="site-head">
+      <div class="site-head-inner">
+        <a class="brand" href="#/" id="brand">J-Space Demo</a>
+        <nav class="site-nav" id="nav" aria-label="Main"></nav>
+        <div class="tools" id="tools"></div>
+      </div>
+    </header>
+    <div class="frame">
+      <div class="frame-inner">
+        <main id="view" class="site-main" tabindex="-1"></main>
+        <footer class="site-foot">
+          <div class="dots" aria-hidden="true"></div>
+          <div class="foot-row">
+            <p id="footer-note" class="foot-note"></p>
+            <p class="foot-links" id="footer-links"></p>
+          </div>
+        </footer>
+      </div>
+    </div>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

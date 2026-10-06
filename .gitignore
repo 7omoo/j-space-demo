@@ -1,0 +1,17 @@
+# Python / uv
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Upstream checkout (pinned by scripts/bootstrap.sh) and generated artefacts
+vendor/
+out/
+cache/
+
+# macOS
+.DS_Store
+
+# Analyses run from the page (the history), at the top level only: src/*/data and web/data are committed
+/data/
