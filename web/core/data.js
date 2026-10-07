@@ -1,7 +1,7 @@
 // Where the screens get their data. The prepared cases are always files under data/ (written by
 // `jspace-demo export`), on the static site and in the local app alike. The local app adds an API for what needs a
 // model: its state, the user's own analyses and their history. config.json says which of the two is running, so the
-// static site never asks for an API it does not have. Paths are relative, so any sub-path works (GitHub Pages).
+// static site never asks for an API it does not have. Paths are relative, so any sub-path works (7omo.com/j-space/).
 
 const MODEL_KEY = "jspace.model";
 

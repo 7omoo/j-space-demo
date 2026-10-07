@@ -8,7 +8,7 @@ import { expertDetails } from "./expert.js";
 import { conditionList, dots, emptyState, external, link, modelPicker, outcomeLabel, pageHead, row } from "./parts.js";
 import { REPOSITORY, runLocally } from "./try.js";
 
-const LIMITS = ["1", "2", "3", "4", "5", "6"];
+const LIMITS = ["1", "2", "3", "4", "5", "6", "7"];
 const FOCUS_WORD = "boot"; // the riddle's clue (the case's focus token in data/cases.json)
 
 // A row of paragraphs (strings) and other content.

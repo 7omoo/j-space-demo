@@ -13,8 +13,8 @@ runs on every push; the checks that need a model or a browser are opt-in markers
 | E2E | Chromium | `uv run pytest -m e2e` | every screen × Japanese and English × desktop and phone: renders, no console errors, no sideways scroll at 375 px and the home table's four columns in view, both themes, no request to any other site (no API, no web fonts); the theme follows the system until the reader chooses and is remembered; the page's own fonts load; every case opens from the home table with its reply in full; the table's counts for every model; the model buttons; the boot riddle and every layer for every model; the local app's try page (the form, the running analysis, the analyses kept here) with the model replaced by recorded analyses (`tests/fakes.py`) |
 | Performance | a running local app | `uv run python experiments/perf_jobs.py` | 20 Japanese jobs: 90% within 30 s, memory flat, no swap |
 
-CI (`.github/workflows/ci.yml`) runs the static, unit and E2E layers, then deploys `web/` to GitHub Pages from the
-main branch.
+CI (`.github/workflows/ci.yml`) runs the static, unit and E2E layers. It publishes nothing: the site is served
+from 7omo.com, which copies `web/` at a pinned commit of this repository.
 
 ## Risks and the tests that cover them
 

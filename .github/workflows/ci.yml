@@ -36,23 +36,3 @@ jobs:
         run: uv run playwright install --with-deps chromium
       - name: Every screen in both languages, desktop and phone
         run: uv run pytest -m e2e
-
-  deploy:
-    name: Publish the static site
-    needs: check
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v4
-        with:
-          path: web
-      - id: deployment
-        uses: actions/deploy-pages@v4

@@ -71,7 +71,7 @@ The Japanese replies depend on the model, so they sit per model in `src/jspace_d
 ## The page
 
 `web/` is plain HTML, CSS and JavaScript modules: no framework and no build step. The prepared cases are always
-read from `web/data/`, so the static site (GitHub Pages) and the local app draw them with the same code.
+read from `web/data/`, so the published site and the local app draw them with the same code.
 `web/config.json` says which one is running: the local server answers `/config.json` with `{"live": true}` and adds
 three things that need a model or this machine.
 

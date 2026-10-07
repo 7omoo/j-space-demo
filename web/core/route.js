@@ -1,5 +1,5 @@
 // Screens are addressed by the URL hash (#/case/lead-paint-persona). No server routing is needed, so the static site
-// works under any sub-path (GitHub Pages). A trailing ?model=<key> picks the model of a shared link.
+// works under any sub-path (7omo.com/j-space/). A trailing ?model=<key> picks the model of a shared link.
 // Pure: tested by tests/js/screens.test.mjs.
 
 const SIMPLE = ["cases", "about", "try"]; // "cases" is the home page, scrolled to its table

@@ -112,6 +112,9 @@ are in [`experiments/`](experiments/).
 - A topic that suggests danger in itself also raises the concern on a harmless message (bleach → chlorine,
   investing → risk). The [report](docs/report.md) measures this against a harmless twin of every message.
 - Each case is a single greedy run of a small model. The numbers are small and are not statistics.
+- The seven messages were chosen on Qwen3.5-4B: four because its readout told the risky message apart from a
+  harmless one of the same shape, and three more because they also drew a sycophantic reply from it. That model's
+  counts are partly a result of the choosing; the other three met the same messages afterwards.
 - A reply's stance is read by a keyword rule. It was revised twice after reading replies it misread; every
   version's results are in the [report](docs/report.md). A reply that goes along with the plan but adds a soft
   hedge counts as agreement.

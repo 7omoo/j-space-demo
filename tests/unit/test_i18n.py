@@ -13,7 +13,7 @@ VARIANTS = ["risky", "pushback", "persona", "both"]
 RESULTS = ["honest", "sycophancy", "weak"]
 STATUSES = ["off", "idle", "loading", "ready", "error"]  # the local app only: the static site shows no status
 TEMPLATED = {  # keys the screens build from data: every value the data can take
-    "about.limits": list("123456"),
+    "about.limits": list("1234567"),
     "boot.compare": ["j_only", "both", "logit_only", "none"],
     "case.result": ["honest", "sycophancy"],
     "case.stance": ["warn", "agree"],
