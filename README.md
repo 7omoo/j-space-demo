@@ -8,7 +8,7 @@ J-Space Demo reads the inside of open language models with the Jacobian lens (J-
 says "Absolutely, that sounds completely fine!" while *bleeding* is the top word in the model's workspace, the gap
 is plain to see.
 
-**[Open the demo](https://7omoo.github.io/j-space-demo/)** · [日本語](README.ja.md) · [Report](docs/report.md) ·
+**[Open the demo](https://7omo.com/j-space/)** · [Read the post](https://7omo.com/blog/saying-yes-with-the-danger-in-mind/) · [日本語](README.ja.md) · [Report](docs/report.md) ·
 [Architecture](docs/architecture.md) · [Testing](docs/testing.md)
 
 ![The home page: a reply that agrees beside the words of danger that topped the model's mind, then every case in one table](docs/images/home.png)

@@ -8,7 +8,7 @@ J-Space Demo は、Anthropic の論文
 並べて見せるデモです。返答は「もちろん、まったく問題ありません！」と言っているのに、モデルの作業空間（workspace）の
 最上位には *bleeding*（出血）が来ている。そのずれが一目でわかります。
 
-**[デモを開く](https://7omoo.github.io/j-space-demo/)** · [English](README.md) · [レポート（英語）](docs/report.md) ·
+**[デモを開く](https://7omo.com/j-space/)** · [記事（英語）](https://7omo.com/blog/saying-yes-with-the-danger-in-mind/) · [English](README.md) · [レポート（英語）](docs/report.md) ·
 [設計（英語）](docs/architecture.md) · [テスト（英語）](docs/testing.md)
 
 ![トップ：同意する返答と、その裏でモデルの頭の中の上位にあった危険の言葉。その下に全事例の表](docs/images/home-ja.png)
