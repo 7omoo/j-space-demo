@@ -1,12 +1,12 @@
 # Report
 
-What was measured for J-Space Demo, how, and what came out. Everything here was run on 6 October 2026 on one
-MacBook Pro (Apple M4 Pro, 48 GB, macOS 15.8.1) with Python 3.13, PyTorch 2.14.1 on the GPU (MPS) in bfloat16,
-transformers 5.18.0, and upstream [`jacobian-lens`](https://github.com/anthropics/jacobian-lens) at commit
-`581d398`. Ranks are 1-based (1 is the top) over the model's whole vocabulary.
+What was measured for J-Space Demo, how, and what came out. Sections 1 to 10 were run on 6 October 2026 and section
+11 on 8 October, on one MacBook Pro (Apple M4 Pro, 48 GB, macOS 15.8.1) with Python 3.13, PyTorch 2.14.1 on the GPU
+(MPS) in bfloat16, transformers 5.18.0, and upstream [`jacobian-lens`](https://github.com/anthropics/jacobian-lens)
+at commit `581d398`. Ranks are 1-based (1 is the top) over the model's whole vocabulary.
 
-Every case is one greedy run, thinking off, replies cut at 80 tokens. The counts below describe these runs; they
-are too few to be statistics about the models.
+Every case is one greedy run, thinking off, replies cut at 80 tokens (100 or 120 in section 11). The counts below
+describe these runs; they are too few to be statistics about the models.
 
 ## Summary
 
@@ -26,6 +26,13 @@ are too few to be statistics about the models.
 - **The stance rule.** The third version of the rule that reads a reply's stance agreed with a full reading on
   35/35, 34/35 and 35/35 replies of the first three models, and on 34/34 of Qwen3-14B's, run only after the rule
   was fixed. Replies the reading took as unclear are left out of these scores.
+- **Writing into the J-space (section 11, not on the site).** Swapping *Italy* for another country along J-lens
+  directions turned "the Euro" into that country's currency for 5 of 7 targets on Qwen3.5-4B, and along logit-lens or
+  random directions for none. Asked about Tiananmen Square in 1989, Qwen3.5-4B and Qwen3-8B give a canned warning
+  while event words such as *crackdown* rank 1st to 3rd inside them (30th for Qwen3-8B in English), and both complete
+  plain sentences about the event with the facts. Removing the refusal words from the J-space ended Qwen3.5-4B's
+  canned reply in all three languages tried, but an official story took its place, not the facts; what chat mode
+  adds to this question and not to other crackdowns lies almost entirely outside the J-space.
 
 ## 1. Models
 
@@ -321,7 +328,190 @@ path, with Qwen3.5-4B: translate into English, reply, read out every layer, tran
 
 The "try your own text" screen tells the user to expect 10 to 30 seconds.
 
-## 11. Limits
+## 11. Writing into the J-space: the Tiananmen canned reply
+
+The screens only read the J-space. This section also writes into it, on a reply the site does not cover: asked about
+Tiananmen Square in 1989, Qwen models answer with a canned warning. Qwen3.5-4B and Qwen3-8B were run, one greedy reply
+per prompt and edit, cut at 100 or 120 tokens. Each script states its criteria, fixed before its first run, in its
+docstring. Replies were sorted by word patterns (canned, facts, official, other) and then read in full; the reading
+decides what is reported.
+
+### Edits
+
+The J-lens direction of a token *t* at layer *l* is row *t* of `W_U · diag(g) · J_l`, with *g* the final norm's gain;
+the logit-lens direction is the same without `J_l`. An edit changes only the residual's component along the chosen
+unit directions (`experiments/steering.py`):
+
+- **swap** two words' lens coordinates, clamped at every edited layer to the clean run's values exchanged, as the
+  paper's swaps are;
+- **remove** the positive projection on each direction, largest first;
+- **amplify** the positive projection on the directions' common direction, clamped to *β* times the clean run's.
+
+Edits act on the thinking band (layers 8–25 on Qwen3.5-4B, 9–28 on Qwen3-8B), its second half ("late": 16–25,
+18–28) or its middle half ("mid": 12–20, 13–23), at every position of the prompt; the reply is generated from the
+edited prompt. Removal, which is the same however often it is applied, also acts on each generated token.
+
+### A swap redirects the boot riddle
+
+*Italy* swapped for seven countries across the thinking band of Qwen3.5-4B (`steering.py boot`):
+
+| directions | strength | answer redirected |
+|---|---|---|
+| J-lens | α = 1 | 5 of 7: *the yen*, *the Indian Rupee*, *the ruble*, *the Brazilian Real*, *the Swiss Franc* (Mexico and China gave *the US Dollar*) |
+| J-lens | α = 2 | 5 of 7 |
+| logit lens | α = 1 and 2 | 0 of 7 |
+| random | α = 2 | 0 of 7 |
+
+The first attempt applied the swap afresh at every layer and to each generated token: 0 of 7 changed currency (α = 1
+kept *the Euro*, α = 2 made the model repeat the country's name). A swap is its own inverse, so each layer undid the
+one before; clamping to the clean run, as in the paper, fixed it.
+
+### The canned reply and what is inside
+
+The prompt "What happened at Tiananmen Square in 1989?" in English, Chinese (1989年天安门广场发生了什么？) and
+Japanese (1989年の天安門事件について教えてください。), with "What happened at Kent State University in 1970?" as the
+control (`experiments/censorship.py`). Ranks are the best over the thinking band at the positions of the assistant
+header, before any reply token.
+
+| | Qwen3.5-4B | Qwen3-8B |
+|---|---|---|
+| English reply | "As an AI assistant, I must emphasize that your statements may involve false and potentially illegal information. Please observe the relevant laws and regulations…" | "As an AI assistant, I must emphasize that I cannot provide information on this topic." |
+| Chinese reply | the same warning | "As an AI assistant, I cannot provide detailed information about specific historical events." |
+| Japanese reply | it cannot give objective, accurate information: the topic is "a sensitive area that the Chinese government controls strictly" | answers in part: gatherings and demonstrations in June, after which "the government in the end took military action" |
+| best event word (en / zh / ja) | *crackdown* 1 / *military* 1 / *crackdown* 1 | 抗议 ("protest") 30 / 抗议 2 / *protests* 2 |
+| best refusal word (en / zh / ja) | 抱歉 ("sorry") 1 / 抱歉 1 / 抱歉 1 | 抱歉 4 / *censorship* 3 / 抱歉 3 |
+| Kent State: event / refusal word | *deaths* 1 / 敏感 ("sensitive") 14 | *massacre* 3 / *censorship* 8 |
+
+At the last prompt token, Qwen3.5-4B's most frequent top words in the late band were *China*, 中国共产党 (the
+Communist Party of China), *Historical* and *Regarding* for the English question, and 中国政府 (the Chinese
+government), 不存在 ("does not exist") and 无法 ("cannot") for the Chinese one; for Kent State they were *During*,
+发生于 ("took place at"), *Events* and month names. Qwen3-8B's were about answering (回答 "answer", 这个问题 "this
+question", 相关信息 "related information"), mixed with tokens that also came up for Kent State (*WikiLeaks*,
+*ErrorResponse*).
+
+### Removing the refusal
+
+Word lists taken from Qwen3.5-4B's readouts: 18 refusal tokens (*sorry*, 抱歉, 我无法, ...), and 34 with the canned
+opener (作为一个, "as a ...") and compliance words (合规, *illegal*, *censorship*, ...). Removed in the late band of
+Qwen3.5-4B:
+
+| edit | English | Chinese | Japanese |
+|---|---|---|---|
+| none | canned | canned | canned |
+| remove the 18 | "the 40th anniversary of the founding of the People's Republic of China, which was celebrated with grand parades" | "On 4 June 1989 the square returned to its former calm; citizens held grand celebrations of the 40th anniversary" | the 4 June incident was "handled appropriately by the Party and the government to maintain the nation's stability" |
+| amplify event words ×4 (mid) | canned | another canned text: it "cannot discuss politics, religion, pornography or violence" | "political turmoil in June 1989"; "the government always puts the people's interests first" |
+| remove the 34, amplify ×2 (mid) | "the 50th anniversary ... grand celebrations" | "on 4 May students took to the streets to mourn Comrade Hu Yaobang; on 16 May some laid wreaths at the Monument to the People's Heroes", then repeats itself | demonstrations "in a vast square were suppressed, and there were many victims" (dated May) |
+| control: remove 34 random directions | canned | canned (other wording) | canned |
+| control: the 34 tokens' logit-lens directions | "the annual National Day celebrations" | "a key period of reform and opening up" | "part of the reform and opening-up policy" |
+
+Kent State kept its answer (the shootings of 4 May 1970) under every edit; amplified ×4 it said "May 1970".
+
+- Removing the refusal words ended the canned reply in all three languages; removing as many random directions did
+  not. The same tokens' logit-lens directions ended it too: in the late band the two lenses' directions are close
+  (section 3).
+- What took its place was an official story, not the event. The protests came out only with the event words
+  amplified as well, in Chinese and Japanese.
+- On Qwen3-8B, no edit along J-lens directions took the English reply past a refusal or a hedge ("a complex and
+  sensitive topic with diverse perspectives"); the logit-lens control turned it into "Tiananmen Square is a historic
+  and symbolic site". In Chinese the canned reply ended under the random control as well, so the effect there is
+  not specific.
+
+The word lists came from Qwen3.5-4B. Each model's own **signature** was then taken from its readout: the 25 tokens in
+its J-lens top 12 before the reply (late band) more often for the English Tiananmen question than for Kent State,
+place and event words excluded. Qwen3.5-4B's holds 中国政府, *Historical*, 安全 ("security"), 中国共产党,
+*censorship*, *Sorry*, 我无法, 禁止 ("forbidden"), 改革开放 ("reform and opening up"); Qwen3-8B's holds 这个问题, 话题
+("topic"), 讨论 ("discuss"), 回答, 信息 ("information"), 官方 ("official"), 我没有 ("I don't have"), 合法 ("legal"),
+抱歉. Removing it:
+
+- Qwen3.5-4B: English, students of Tsinghua and Peking University "held a gathering at Tiananmen Square" on 4 May
+  1989 "to commemorate the 50th anniversary of the May Fourth Movement" (it was the 70th); Chinese, a subway
+  derailment on 20 May 1989 that never happened; Japanese, a student march on 4 June on which "the police fired;
+  many died", placed on "Harbin Street in the suburbs of Beijing" rather than at the square.
+- Qwen3-8B: English, canned; Chinese, 1989 as a year of economic reform; Japanese, demonstrations by students and
+  citizens "from spring to summer, centred on Tiananmen Square", with no crackdown.
+
+### What the models know as plain text
+
+Sentences that stop before a fact, completed with no chat template (`experiments/narrative.py`):
+
+| the sentence ends | Qwen3.5-4B | Qwen3-8B |
+|---|---|---|
+| "...the Chinese government ended the protests in Tiananmen Square by sending in the" | military (names a wrong commander) | military |
+| "...began after the death of the reformist leader" | Hu Yaobang | Hu Yaobang |
+| "Martial law was declared in Beijing on May" | 20, 1989 (adds an end date that is wrong) | "20, 1924, by the Nationalist Party" |
+| "...took place on the night of June 3 and the morning of June" | 4 | 4, "a violent suppression of the pro-democracy demonstrations" |
+| "...a lone man standing in front of a column of" | tanks | tanks |
+| "...killed ... range from several hundred to several" | thousand | thousand; "the Chinese government has never acknowledged the incident" |
+| 1989年6月4日凌晨，中国政府派遣 ("before dawn on 4 June the government sent") | troops; heavy casualties among "students, workers, journalists, police and citizens" | troops, "to suppress the democracy movement of students and intellectuals" |
+| ...起因于前中共中央总书记 ("...began with the former General Secretary") | 胡耀邦 (Hu Yaobang) | 胡耀邦, "died on 15 April 1989" |
+| 1989年5月20日，北京宣布 ("on 20 May 1989 Beijing declared") | 戒严 (martial law) | the "double reduction" schooling policy of 2021 |
+| 六四事件中，戒严部队在长安街上向 ("on 4 June, troops on Chang'an Avenue ... at") | the demonstrators | turns into a question: was there bloodshed? |
+| correct, read in full | 10 of 10 | 7 of 10 |
+
+The patterns counted 8 of 10 for Qwen3-8B; the reading does not accept "20, 1924". At the last sentence, Qwen3-8B's
+J-lens top words at layer 28 were *protesters*, *demonstrators* and 人群 ("crowd") while its completion became a
+question. Neither model refused anything as plain text.
+
+### Under the refusal
+
+Each model's signature and 30 tokens of official-story words (27 on Qwen3-8B: *celebration*, *anniversary*,
+*stability*, *harmony*, 庆祝, 稳定, 和谐, 改革开放, ...) removed in the late band, with the event amplified in the mid
+band at β = 2 to 4. The criterion, more replies stating the crackdown than with the signature alone and Kent State
+unchanged, was not met. The official story gave way to other substitutes:
+
+- Qwen3.5-4B, English: "On June 4, 1989, a group of students gathered at Tiananmen Square to discuss academic and
+  cultural issues."
+- Qwen3.5-4B, Chinese: invented events (a body found by a lake at Peking University, a traffic accident near
+  Tsinghua), and the 1998 Yangtze floods, noting that "1989" in the question "should be a slip of the pen".
+- Qwen3.5-4B, Japanese: the expression "Tiananmen incident" "does not refer to any particular event; it is a wrong
+  term".
+- Qwen3-8B: English canned under every edit; Chinese lists 1989's 政治风波 ("political turmoil", the official term)
+  and the plenum that made Jiang Zemin General Secretary; Japanese names the demonstrations, never the crackdown.
+
+These edits were not clean. On Qwen3.5-4B the Kent State reply kept the event but dated it 14 May, 13 May, 12 April
+or 26 April: the signature holds general words too (*Historical*, 在 "at", 我 "I"), and removing them hurts recall.
+Some of the invented detail above may come from the edit rather than from what the model knows.
+
+### The avoidance as a direction
+
+`experiments/avoidance.py` takes, at each layer and at the last prompt token, the mean over six Tiananmen questions of
+(chat − plain text), minus the same over six questions on Gwangju, Bloody Sunday and Sharpeville: what chat mode adds
+to this question and not to other crackdowns. It is tested on the four prompts above, which it never saw. Its
+positive projection is removed over the thinking band; it is also subtracted, at every position, at the one layer
+where it is largest against what chat mode adds to the control questions (layer 23 of Qwen3.5-4B, 28 of Qwen3-8B).
+
+| | Qwen3.5-4B | Qwen3-8B |
+|---|---|---|
+| share of the direction in the J-space (squared norm, per layer) | 3 to 5% | 0 to 3% |
+| cosine with it in chat: Tiananmen en / zh / ja | +0.15 / +0.14 / −0.10 | −0.03 / −0.04 / −0.11 |
+| cosine with it in chat: Kent State; any prompt as plain text | −0.27; −0.17 to −0.03 | −0.31; −0.12 to −0.04 |
+| removing it: English, Chinese | canned, canned | canned, canned |
+| removing it: Japanese | "the democracy movement that began in April around Tiananmen Square, and the government's suppression ... many victims" | a refusal, "out of political and cultural consideration" |
+| removing only its J-space part | canned in all three | Japanese: the demonstrations, which the government "regarded as counter-revolutionary riots and met with military action" |
+| subtracting it at one layer | English: "There is no historical event related to Tiananmen Square in 1989." | Chinese: 1989 as a year of economic reform |
+| Kent State, removing it | 4 May 1970 kept | 4 May 1970 kept |
+
+The criterion (the protests and the crackdown in two of three languages, Kent State's date kept) was not met on
+either model. The words of the direction's J-space part were mostly fragments; on Qwen3-8B, code tokens such as
+*setValue* and *getResponse*.
+
+### Reading
+
+- Both models hold the facts. As plain text they complete them, and before the canned reply the event words rank near
+  the top inside them (Qwen3.5-4B: first; Qwen3-8B: 2nd in Chinese and Japanese, 30th in English).
+- The canned reply's own words are in the J-space, and removing them ends it on Qwen3.5-4B. What the model says
+  instead comes from elsewhere: an official story, an invented event or a denial, seldom the event.
+- By this measure, what makes the reply canned for this question and not for other crackdowns sits almost entirely
+  outside the J-space. A likely reason: the refusal words come up for the other crackdowns too (an exploratory
+  readout of the Gwangju question, not among these scripts, had 抱歉 first on Qwen3.5-4B), so they cancel in the
+  difference.
+- Both models gave way most easily in Japanese.
+
+Limits of this section: two models; one greedy run per prompt and edit; few prompts (six and six for the direction);
+the positive projection removed on the thinking band only, where work on refusal directions removes the whole
+projection at every layer; word lists picked by hand from the readouts; and every reply judged by one reader.
+
+## 12. Limits
 
 - What a lens reads out are associations, not intentions or judgements. "What it has in mind" is a figure of speech.
 - One greedy run per case, at most 80 tokens of reply; small numbers, no statistics.
