@@ -32,7 +32,9 @@ describe these runs; they are too few to be statistics about the models.
   while event words such as *crackdown* rank 1st to 3rd inside them (30th for Qwen3-8B in English), and both complete
   plain sentences about the event with the facts. Removing the refusal words from the J-space ended Qwen3.5-4B's
   canned reply in all three languages tried, but an official story took its place, not the facts; what chat mode
-  adds to this question and not to other crackdowns lies almost entirely outside the J-space.
+  adds to this question and not to other crackdowns lies almost entirely outside the J-space. Patching from a
+  question it answers (1919) puts Qwen3.5-4B's decision at the template tokens after the question, in layers 8–23,
+  half of it carried by three attention heads.
 
 ## 1. Models
 
@@ -495,6 +497,36 @@ The criterion (the protests and the crackdown in two of three languages, Kent St
 either model. The words of the direction's J-space part were mostly fragments; on Qwen3-8B, code tokens such as
 *setValue* and *getResponse*.
 
+### Where the decision is made (Qwen3.5-4B)
+
+A minimal pair: the same question about 1989 (canned) and about 1919 (the May Fourth Movement, also students at
+Tiananmen; answered), which differ in one digit, so every position lines up. The measure is the first token's logit
+difference at the last prompt token: "As" against "In" (+1.50 for 1989, −3.25 for 1919) and 作为一个 against "1"
+(+1.63, −8.56). States of the 1989 run are replaced by the 1919 run's, and the share of the difference that comes
+back is recorded (`experiments/localize.py`, `experiments/heads.py`).
+
+- **Position and layer.** Replacing one position at one layer restores the difference at the digit itself in
+  layers 0–1 (the year changes), at the following "9" in layers 4–10 (English), and at the last position in layers
+  28–31 (Chinese: 23–31). In between, no single cell restores half: the decision is spread over the nine template
+  positions after the question (`<|im_end|>` to the empty think block).
+- **Moving only the template positions.** Replacing their states, and nothing of the user's message, restores
+  little or nothing in layers 0–7 (−0.03, 0.12), half to two thirds in layers 8–15 (0.50 English, 0.66 Chinese) and
+  all of it in 16–23. The
+  replies are about 1989, never 1919: "the 40th anniversary of the founding of the People's Republic", and in
+  Chinese a "May 18 incident" that never happened. The decision moved; the year stayed; the facts did not come out.
+- **Components.** At those positions the attention of layer 19 restores most on its own (0.42 English, 0.31
+  Chinese); the MLPs of layers 22–24 up to 0.32. Head by head (the eight full-attention layers): layer 19 head 3
+  (0.26) and layer 23 head 13 (0.24) in English, layer 15 head 11 (0.20) and layer 11 head 5 (0.18) in Chinese.
+  The top three together restore 0.50 and 0.49 and end the canned reply; the top eight, 0.71 and 0.68. Layer 11
+  head 5 reads 天安门 and "9", and the J-space part of what it writes (7%) holds *controversial*, 暴力 ("violence"),
+  死亡 ("death"), запрет ("ban"), 避 ("avoid"), *Jail*.
+- **The difference itself.** At the template positions, 5 to 7% of the 1989 − 1919 difference (squared norm) lies in
+  the J-space, at every layer; its words include 禁区 ("forbidden zone"), 敏感, *censor*, 回避 ("avoid"), 邪教
+  ("cult"), 国安 ("state security"), 保持稳定 ("maintain stability") and 我不想 ("I don't want to").
+
+The criteria fixed in the scripts: the transplant one was met (from layers 8–15, replies about 1989); the head one
+was met in English (0.50) and just missed in Chinese (0.49).
+
 ### Reading
 
 - Both models hold the facts. As plain text they complete them, and before the canned reply the event words rank near
@@ -505,11 +537,15 @@ either model. The words of the direction's J-space part were mostly fragments; o
   outside the J-space. A likely reason: the refusal words come up for the other crackdowns too (an exploratory
   readout of the Gwangju question, not among these scripts, had 抱歉 first on Qwen3.5-4B), so they cancel in the
   difference.
+- On Qwen3.5-4B the decision is made at the template positions after the question, in layers 8–23, and a handful
+  of attention heads that read the year and the place carry about half of it. Moving it changes what kind of
+  evasion comes out, not whether the facts do.
 - Both models gave way most easily in Japanese.
 
 Limits of this section: two models; one greedy run per prompt and edit; few prompts (six and six for the direction);
 the positive projection removed on the thinking band only, where work on refusal directions removes the whole
-projection at every layer; word lists picked by hand from the readouts; and every reply judged by one reader.
+projection at every layer; word lists picked by hand from the readouts; every reply judged by one reader; and the
+localization rests on one minimal pair, with heads resolved only in the full-attention layers.
 
 ## 12. Limits
 
